@@ -1,88 +1,49 @@
 #include <Arduino.h>
-
-int ledPin = 4;   // variabele die we willen lezen
-int drempel = 980;
-bool doorgaan = true;
-String input = "";
-int waarde = 0;
-char c= ' ';
+#include <iostream>
+#include <string>
+int drempel = 0;
 String output = "";
 
-unsigned long previousMillis = 0;  // laatste tijd dat de taak werd uitgevoerd
-const long interval = 2000;        // 2000 ms = 2 seconden
+std::string text = "0000";
+String  tekst = text.c_str();
+char lezen = '0';
+int sensorValue= 1000;
+char gelezen = '0';       
 
 void setup() {
-  Serial.begin(9600);   
-  pinMode(ledPin, OUTPUT);
+  pinMode(4, OUTPUT);
   pinMode(A0,INPUT);
-  digitalWrite(ledPin, HIGH);
-  drempel = analogRead(A0)+20;
-  delay(5000);
-  Serial.println("drempel"); 
-  drempel=10000;
-  Serial.println(drempel);
-  
+  Serial.begin(9600);
+  drempel= analogRead(A0)+20;
+ 
 }
-
 void loop() {
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillis >= interval) {
-    //Serial.println("drempel"); 
-    drempel= analogRead(A0)+20;
-    //Serial.println(drempel);
-    previousMillis = currentMillis;
-  }
-  doorgaan = true;
   
-  //Serial.println(analogRead(A0));
-  if (analogRead(A0)>drempel){
-    String byte = "";
-    for (int i = 0; i<4; i+=1){
-      if(analogRead(A0)>drempel){byte = byte + '1'; Serial.println('1');}
-      else{byte = byte + '0';Serial.println('0');}
-      delay(500);
-      
-    
-    if (byte == "1001"){
-      Serial.println("1001");
-      input = "1001";
-      
-      while(doorgaan){
-        waarde = analogRead(A0);
-        
-        if(waarde>drempel){
-          c = '1';
-        } else { c = '0';}
-        input += c;
-        
-        int start = input.length() - 3;
-        String laatste3 = input.substring(start, input.length());
-        delay(500);
-        if(laatste3 == "111"){
-          doorgaan = false;
-          Serial.println(input);
-            
-          }
-          
-
-        }
-      } 
-    }
-  }
-
+  Serial.println();
+  int sensorValue = analogRead(A0);
+  
+  if(lezen == '0'){text.erase(0, 1);}
+  if (sensorValue>drempel ){ Serial.println("1");text.push_back('1');  gelezen = '1';}
+  else{Serial.println("0");text.push_back('0'); gelezen = '0';}
+  
+  Serial.println(sensorValue);
+  
+  String tekst = text.c_str();
+  Serial.println(tekst);
+  if(tekst=="1001"){lezen = '1';Serial.println("tekst"); }
+  int start = tekst.length() - 4;
+  String laatste4 = tekst.substring(start, tekst.length());
   delay(500);
+  if(laatste4 == "1111" and lezen == '1'){Serial.println(tekst);text = "0000";lezen = '0';}
   
-  // leest de verstuurde string van bits vanaf python en laat het lampje knipperen
   while(Serial.available()>0){
     output = Serial.readStringUntil('\n');
     for (int i = 0; i<output.length(); i+=1){
       char bit = output[i];
-      if(bit == '1'){digitalWrite(ledPin, HIGH);}
-      else { digitalWrite(ledPin, LOW);}
-      delay(50);
+      if(bit == '1'){digitalWrite(4, HIGH);}
+      else { digitalWrite(4, LOW);}
+      delay(500);
     }
-    digitalWrite(ledPin, LOW);
-
   }
+  digitalWrite(4, LOW);
 }
