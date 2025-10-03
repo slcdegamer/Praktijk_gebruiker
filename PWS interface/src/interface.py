@@ -41,18 +41,29 @@ class Button:
         screen.blit(self.tekst,self.text_rect)
 
 class Textbox:
-    def __init__(self,tekst,rect,):
+    def __init__(self,tekst,rect,typable,status):
         self.text_string = tekst
         self.text = font1.render(self.text_string,True,WHITE)
         self.rect = pygame.Rect(rect)
         self.text_rect = self.text.get_rect(center=self.rect.center)
-        self.status = False
+        self.status = status
+        self.typable = typable
+        self.opgeslagentext = []
+        self.file_path = "berichten.txt"
     def draw(self,screen):
         pygame.draw.rect(screen, GRIJS, self.rect)
         screen.blit(self.text,self.text_rect)
     def updatetext(self):
         self.text = font1.render(self.text_string, True, WHITE)
         self.text_rect = self.text.get_rect(center=self.rect.center)
+        self.text_rect.w = max(100, text_surface.get_width()+10)
+    def opslaan(self):
+        self.opgeslagentext.append(self.text_string)
+        with open(self.file_path, "a") as file:
+            for tekst in self.opgeslagentext:
+                file.write(tekst + "\n")
+                #print("txt file was created") Get hastacket LOL!
+        self.text_string = ""
 
 
 class Central():
@@ -60,6 +71,9 @@ class Central():
         self.users = []
         self.buttons = []
         self.textboxes = []
+        self.displaybox = []
+        x = 10
+        y = 50
     def updatebuttons(self,screen): #Kijkt welke knop getekent moet worden.
         for button in self.buttons:
             if button.status == True:
@@ -68,22 +82,29 @@ class Central():
         for button in self.buttons:
             if (button.rect.collidepoint(cords)):
                 button.status = False
-    def textboxesUpdate(self,screen):
+    def textboxesUpdate(self):
         if self.buttons[1].status == False:
-            self.textboxes[0].draw(screen)
-            self.textboxes[0].status = True
+            self.textboxes[0].status = True #hier mee bezig!
+    def draw(self,screen):
+        for textbox in self.textboxes:
+            if textbox.status == True:
+                textbox.draw(self,screen) #HIer mee bezig
     def textboxesChecker(self):
         for textbox in self.textboxes:
             if textbox.status == True:
                 return(True)
+    def displaybox(self,tekst):
+        central.self.displaybox.append(Textbox(tekst,(10,self.y,400,200),False,True))
+        self.y += 250 #HIer mee bezig
 
 
                 
 
 central = Central()
-central.buttons.append(Button("Start", (350, 250, 100,100),True, LBLAUW))
-central.buttons.append(Button("type hier", (300, 360, 200,100),True,DGRIJS ))
-central.textboxes.append(Textbox("", (300, 360, 200,100)))
+central.buttons.append(Button("Start", (350, 350, 100,100),True, LBLAUW))
+central.buttons.append(Button("type hier", (100, 460, 600,100),True,DGRIJS ))
+central.textboxes.append(Textbox("", (100, 460, 600,100),True,True))
+
 
 
 while True:
@@ -97,12 +118,13 @@ while True:
         if event.type == pygame.KEYDOWN and central.textboxes[0].status == True:
             if event.key == pygame.K_BACKSPACE:
                 central.textboxes[0].text_string = central.textboxes[0].text_string[:-1]
-            if event.key == pygame.K_RETURN:
+            elif event.key == pygame.K_RETURN:
                 central.buttons[1].status = True
                 central.textboxes[0].status = False
+                central.textboxes[0].opslaan()
             else:
                 central.textboxes[0].text_string += event.unicode
-                central.textboxes[0].updatetext()
+            central.textboxes[0].updatetext()
         
         
         screen.fill(WHITE)
@@ -110,7 +132,7 @@ while True:
     central.updatebuttons(screen)
     central.textboxesUpdate(screen)
     pygame.display.flip()
-    clock.tick(2)
+    clock.tick(60)
 
 
 #Buttonlogboek:
