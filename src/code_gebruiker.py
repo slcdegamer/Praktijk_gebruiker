@@ -19,7 +19,9 @@ text_rect = text_surface.get_rect(center=(400,300))
 
 
 # Pas dit aan naar jouw seriële poort:
-ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
+#ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
+ser = serial.Serial('/dev/tty.usbserial-14130', 9600, timeout=1)
+
 
 print('wacht')
 time.sleep(3)  # wacht even tot de poort klaar isk
@@ -35,14 +37,12 @@ while True:
     if ser.in_waiting > 0: #als er iets verstuurt is dan leest hij dit. 
         line = ser.readline().decode('utf-8').strip()
         
-        if line != 'a' and line != 'b':
+        if line != '0000':
             print('string: ' + str(line))
-        else: print('anders'+str(line))
+        
 
         text_surface = font1.render(line,True,WHITE)
         text_rect = text_surface.get_rect(center=(400,300))
-
-    
 
     #versuurt een string van bits naar het boord
     if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
