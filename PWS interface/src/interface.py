@@ -1,4 +1,3 @@
-import serial
 import time
 import sys
 import select
@@ -49,7 +48,7 @@ class Textbox:
         self.status = status
         self.typable = typable
         self.opgeslagentext = []
-        self.file_path = "berichten.txt"
+        self.file_path = "deberichten.txt"
     def draw(self,screen):
         pygame.draw.rect(screen, GRIJS, self.rect)
         screen.blit(self.text,self.text_rect)
@@ -58,12 +57,14 @@ class Textbox:
         self.text_rect = self.text.get_rect(center=self.rect.center)
         self.text_rect.w = max(100, text_surface.get_width()+10)
     def opslaan(self):
+        print("eyyy")
         central.sendmessages(self.text_string)
         self.opgeslagentext.append(self.text_string)
         with open(self.file_path, "a") as file:
             for tekst in self.opgeslagentext:
                 file.write(tekst + "\n")
-                #print("txt file was created") Get hastacket LOL!
+                print("txt file was created")
+                self.opgeslagentext = []
         self.text_string = ""
 
 
