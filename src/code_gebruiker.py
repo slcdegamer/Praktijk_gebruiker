@@ -19,14 +19,14 @@ text_rect = text_surface.get_rect(center=(400,300))
 
 
 # Pas dit aan naar jouw seriële poort:
-#ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
-ser = serial.Serial('/dev/tty.usbserial-14130', 9600, timeout=1)
+ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
+
 
 
 print('wacht')
 time.sleep(3)  # wacht even tot de poort klaar isk
 print('klaar')
-
+bericht = False
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -37,12 +37,19 @@ while True:
     if ser.in_waiting > 0: #als er iets verstuurt is dan leest hij dit. 
         line = ser.readline().decode('utf-8').strip()
         
-        if line != '0000':
-            print('string: ' + str(line))
-        
-
-        text_surface = font1.render(line,True,WHITE)
+        if bericht == True:
+            woord1,woord2=(bits_naar_string(line,ascii_naar_woord))
+            print(200)
+            bericht = False
+            text_surface = font1.render(woord1,True,WHITE)
         text_rect = text_surface.get_rect(center=(400,300))
+        if line =='Bericht': 
+            bericht = True
+            print(100)
+        
+        if line != '00000000':
+            print(line)
+        
 
     #versuurt een string van bits naar het boord
     if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
