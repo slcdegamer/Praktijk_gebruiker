@@ -1,9 +1,12 @@
+from hamming_code import *
+
+
 ascii_naar_woord = {
     '10000001':'start',
-    '00000010':'gebruiker_online',
-    '00000011':'gebruiker_offline',
+    '00000010':'check_vraag',
+    '00000011':'check_klopt',
     '00000100':'bericht',
-    '00000101':'tekst',
+    '00000101':'check_klopt_niet',
     '11111111':'eind',
     
     '00100000': ' ',
@@ -105,10 +108,10 @@ ascii_naar_woord = {
 
 woord_naar_ascii = {
     'start': '10000001',
-    'gebruiker_online': '00000010',
-    'gebruiker_offline': '00000011',
-    'bericht': '00000100',
-    'tekst': '00000101',
+    'check_vraag.': '00000010',
+    'check_klopt.': '00000011',
+    'bericht.': '00000100',
+    'check_klopt_niet.': '00000101',
     'eind': '11111111',
 
     ' ': '00100000',
@@ -208,55 +211,70 @@ woord_naar_ascii = {
     '~': '01111110'
 }
 
-#opbouw van een byte: plek 1: start. plek 2: type bericht (gebruiker_online, gebruiker_offline, bericht). plek 3: na gebruiker online/offline komt de naam van de gebruiker. na bericht komt ook de naam van de gebruiker. plek 4: de naam van de gebruiker waar het bericht heen moet. plek 5: tekst-header. plek 6: de tekst zelf. plek 7: eind-header. 
+#opbouw van een byte: plek 1: start. plek 2: type bericht ('bericht, check_vraag, check_klopt, check_klopt). plek 3 als het een bericht is: inhoud bericht. plek 4: stop  
 
 #functie returned de type bericht, naam en eventuele tekst. als er geen tekst is (want bijvoorbeeld een gebruiker_online bericht) dan wordt er 0 gereturned 
 def bits_naar_string(bits,ascii_dict):
-    
+    bits = bits[:-8]
+    for i in range(8):
+        bits = bits[:0] + bits[1:]
+    bits = ham_naar_string(bits)
     byte=''
     type_bericht = '' 
-    naam = False
-    naam_woord=''
+    
     tekst=False
     tekst_woord=''
     for bit in bits:
         byte = byte + bit 
         if len(byte) == 8: 
-            byte_vertaald = ascii_dict[byte]
+            
+            if byte in ascii_dict:
+                byte_vertaald = ascii_dict[byte]
             
             if tekst == True:
                 if byte_vertaald == 'eind':
-                    return type_bericht, naam_woord, tekst_woord
+                    return type_bericht, tekst_woord
                 tekst_woord = tekst_woord + byte_vertaald
-            
-            if naam == True: 
-                if byte_vertaald == 'eind':
-                    return type_bericht, naam_woord, '0'
-                elif byte_vertaald == 'tekst':
-                    naam = False
-                    tekst=True
-                else: naam_woord = naam_woord + byte_vertaald
 
-            if byte_vertaald == 'gebruiker_online' or byte_vertaald == 'gebruiker_offline' or byte_vertaald=='bericht':
+            if byte_vertaald=='bericht':
                 type_bericht = byte_vertaald
-                naam = True
+                tekst = True
+            elif byte_vertaald == 'check_vraag' or byte_vertaald == 'check_klopt' or byte_vertaald == 'check_klopt_niet':
+                type_bericht = byte_vertaald
+                return type_bericht, tekst_woord
             byte=''
-    return type_bericht, naam_woord, tekst_woord
+    return type_bericht, tekst_woord
 
 #deze gaat iets anders. in de functie worden alleen de naam en de tekst van bericht omgezet. de rest wordt buiten de functie eraan geplakt(maar die code bestaat nog niet)
 def string_naar_bits(string, woord_naar_ascii):
-    woord = ''
-    for letter in string: 
-        letter = woord_naar_ascii[letter]
-        woord = woord + letter
-    return woord
 
+    type_bericht = ''
+    woord=''
+    stop = False
+    for letter in string: 
+        if stop == True:
+            
+            letter = woord_naar_ascii[letter]
+            
+            woord = woord + letter
+        if stop == False:
+            
+            type_bericht= type_bericht + letter
+            if letter == '.':
+                stop = True 
+                woord = woord + woord_naar_ascii[type_bericht]
+            
+            
+        
+        
+    return '10000001' + str(string_naar_ham(woord))+'11111111'
 
 
         
-type_bericht, naam, tekst  = bits_naar_string('10000001000001000101010001101000011010010110101001110011000001010111001001101001011000110110101111111111',ascii_naar_woord)
-#type_bericht, naam, tekst = bits_naar_string('100000010000001001101010011010010110110111111111',ascii_naar_woord)
-#print(string_naar_bits('Thijs', woord_naar_ascii))
+type_bericht, tekst  = bits_naar_string('1000000101010000010111111111',ascii_naar_woord)
 print(type_bericht)
-print(naam)
 print(tekst)
+
+
+print(string_naar_bits('check_klopt_niet.', woord_naar_ascii))
+
