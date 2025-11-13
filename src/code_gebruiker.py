@@ -13,6 +13,9 @@ clock = pygame.time.Clock()
 
 ZWART= (0,0,0)
 WHITE= (255,255,255)
+LBLAUW = (0,191,255)
+GRIJS = (169,169,169)
+DGRIJS = (40,40,40)
 font1 = pygame.font.Font(None,50)
 text_surface = font1.render('hoi',True,WHITE)
 text_rect = text_surface.get_rect(center=(400,300))
@@ -26,7 +29,6 @@ ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
 print('wacht')
 time.sleep(3)  # wacht even tot de poort klaar isk
 print('klaar')
-bericht = False
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -59,5 +61,3 @@ while True:
     screen.blit(text_surface,text_rect)
     pygame.display.flip()
     clock.tick(60)
-
-
