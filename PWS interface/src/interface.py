@@ -48,8 +48,10 @@ class Textbox:
         self.text_rect = self.text.get_rect(center=self.rect.center)
         self.status = status
         self.typable = typable
-        self.opgeslagentext = []
-        self.file_path = "deberichten.txt"
+        self.opgeslagentextself = []
+        self.opgeslagentextander = []
+        self.file_path_verstuur = "deberichten.txt"
+        self.file_path2_ontvang = "ontvangenberichten.txt"
         self.color = color
     def draw(self,screen):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -59,15 +61,32 @@ class Textbox:
         self.text_rect = self.text.get_rect(center=self.rect.center)
         self.text_rect.w = max(100, text_surface.get_width()+10)
     def opslaan(self):
-        central.sendmessages(self.text_string)
-        self.opgeslagentext.append(self.text_string)
-        with open(self.file_path, "a") as file:
-            for tekst in self.opgeslagentext:
+        central.sendmessages(self.text_string, "None")
+        self.opgeslagentextself.append(self.text_string)
+        with open(self.file_path_verstuur, "a") as file:
+            for tekst in self.opgeslagentextself:
                 file.write(tekst + "\n")
                 print("txt file was created")
-                self.opgeslagentext = []
+                self.opgeslagentextself = []
         self.text_string = ""
 
+    def anderekantopslaan(self):
+        central.sendmessages(self.text_string, "send")
+        self.opgeslagentextander.append(self.text_string)
+        with open(self.file_path2_ontvang, "a") as file:
+            for tekst in self.opgeslagentextander:
+                file.write(tekst + "\n")
+                self.opgeslagentextander = []
+        self.text_string = ""
+
+
+    def binnengekregentext(self):
+        with open(self.file_path2_ontvang, "r") as file2:
+            for line in file2:
+                central.sendmessages(line, "send")
+        with open(self.file_path_verstuur, "r") as file2:
+            for line in file2:
+                central.sendmessages(line, None)
 
 class Central():
     def __init__(self):
@@ -77,6 +96,8 @@ class Central():
         self.sendmessage = []
         self.x = 10
         self.y = 50
+
+        
     def updatebuttons(self,screen): #Kijkt welke knop getekent moet worden.
 
         for sendmessage in self.sendmessage:
@@ -104,6 +125,7 @@ class Central():
         if type == "send":
             x = 450
             color = LBLAUW
+            self.y -=50
         else:
             x = 10 
             color = GRIJS
@@ -131,6 +153,7 @@ central.buttons.append(Button("Start", (350, 350, 100,100),True, LBLAUW))
 central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox("",0, 460, 800,50,True,False,GRIJS))
 
+central.textboxes[0].binnengekregentext()
 
 
 while True:
@@ -155,7 +178,6 @@ while True:
             else:
                 central.textboxes[0].text_string += event.unicode
             central.textboxes[0].updatetext()
-        
         
         screen.fill(WHITE)
 
