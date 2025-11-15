@@ -1,10 +1,11 @@
 import time
 import sys
 import select
+import serial
 import pygame 
 pygame.init()
 from bits_naar_string import *
-import msvcrt
+
 
 breedte, hoogte = 800, 600
 screen = pygame.display.set_mode((breedte, hoogte))
@@ -59,7 +60,8 @@ class Textbox:
         self.text_rect = self.text.get_rect(center=self.rect.center)
         self.text_rect.w = max(100, text_surface.get_width()+10)
     def opslaan(self):
-        central.sendmessages(self.text_string)
+        print("eyyy")
+        central.sendmessages(self.text_string,"send")
         self.opgeslagentext.append(self.text_string)
         with open(self.file_path, "a") as file:
             for tekst in self.opgeslagentext:
@@ -109,6 +111,8 @@ class Central():
             color = GRIJS
             self.y -=50
         central.sendmessage.append(Textbox(tekst,x,self.y,300,50,False,True,color))
+        
+        ser.write((string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n").encode()) #de regel die de bits naar het bord verstuurt 
         self.y += 100
         if self.y > 500:
            central.movemessages("down") 
@@ -130,6 +134,9 @@ central = Central()
 central.buttons.append(Button("Start", (350, 350, 100,100),True, LBLAUW))
 central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox("",0, 460, 800,50,True,False,GRIJS))
+
+ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
+bericht= False
 
 
 
@@ -155,8 +162,27 @@ while True:
             else:
                 central.textboxes[0].text_string += event.unicode
             central.textboxes[0].updatetext()
+    
+    if ser.in_waiting > 0: #als er iets verstuurt is dan leest hij dit. 
+        line = ser.readline().decode('utf-8').strip()
+        if bericht == True:
+            bericht = False 
+            
+            #als bericht ontvangen via het bordje dan wordt dit testbericht verstuurt
+            woord,woord2=bits_naar_string('1000000101010000010111111111',ascii_naar_woord) 
+            central.sendmessages(woord,'ding')
+            
+            # dit hieronder is de echte code 
+            #type_bericht,tekst = bits_naar_string(line,ascii_naar_woord)
+            #if type_bericht == 'bericht':
+                #central.sendmessages(tekst,'ding')
+
+        if line =='Bericht': 
+            bericht = True
         
-        
+        if line != '00000000':
+            print(line)
+
         screen.fill(WHITE)
 
     central.updatebuttons(screen)
@@ -168,21 +194,3 @@ while True:
 # Pos 0: Startknop.
 # Pos 1: Typebox test
 
-    #if ser.in_waiting > 0: #als er iets verstuurt is dan leest hij dit. 
-        #line = ser.readline().decode('utf-8').strip()
-        
-        #if line != 'a' and line != 'b':
-            #print('string: ' + str(line))
-        #else: print('anders'+str(line))
-
-        #text_surface = font1.render(line,True,WHITE)
-        #text_rect = text_surface.get_rect(center=(400,300))
-
-    
-
-    #versuurt een string van bits naar het boord
-    #if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-        #user_input = sys.stdin.readline().strip()
-        #ser.write((user_input + "\n").encode())
-
-#Wat moet er nog gedaan worden? Functie in central de een rij van inputs laat zien, met y + 100. met de input moet nog iets worden gedaan.
