@@ -57,7 +57,6 @@ class Textbox:
         self.text_rect = self.text.get_rect(center=self.rect.center)
         self.text_rect.w = max(100, text_surface.get_width()+10)
     def opslaan(self):
-        print("eyyy")
         central.sendmessages(self.text_string)
         self.opgeslagentext.append(self.text_string)
         with open(self.file_path, "a") as file:
