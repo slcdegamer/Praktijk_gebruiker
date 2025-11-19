@@ -96,4 +96,32 @@ def ham_naar_string(ham):
         
 
     return(string)
-print(string_naar_ham('00000010'))
+
+def pariteitbits_gever(ham):
+    lijst_basisbits = [1] #voegt alle basisbits toe aan een lijst_basisbits 
+    l=len(ham)
+    x=2
+    while l>0:
+        l-=x
+        lijst_basisbits.append(x)
+        x=x*2
+
+    if lijst_basisbits[-1]-1==len(ham): #correctie basisbitslijst
+        lijst_basisbits.pop(-1)
+
+    correctie=[] #maakt correctielijst gebasseerd op de het tellen wat in de ham string staat (zelfde als van string naar ham) 
+    for p in lijst_basisbits:
+        r=0
+        i=0
+        for bit in ham: 
+            i+=1 
+            for t in range(p*2-p):
+                if i%(p*2)==p+t and i!=p: 
+                    r+=int(bit)
+        correctie.append(r%2)
+    string = ''
+    for bit in correctie:
+        string = string + str(bit)
+    return string
+
+    
