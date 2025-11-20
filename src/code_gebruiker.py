@@ -25,7 +25,7 @@ text_rect = text_surface.get_rect(center=(400,300))
 ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
 
 
-
+bericht = False
 print('wacht')
 time.sleep(3)  # wacht even tot de poort klaar isk
 print('klaar')
@@ -40,10 +40,10 @@ while True:
         line = ser.readline().decode('utf-8').strip()
         
         if bericht == True:
-            woord1,woord2=(bits_naar_string(line,ascii_naar_woord))
+            #woord1=(bits_naar_string(line,ascii_naar_woord))
             print(200)
             bericht = False
-            text_surface = font1.render(woord1,True,WHITE)
+            text_surface = font1.render(line,True,WHITE)
         text_rect = text_surface.get_rect(center=(400,300))
         if line =='Bericht': 
             bericht = True

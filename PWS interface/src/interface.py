@@ -120,10 +120,10 @@ class Central():
             else:
                 x = -1
             for msg in self.sendmessage:
-                msg.y -= 100*x
+                msg.y -= 50*x
                 msg.rect.y = msg.y
                 msg.text_rect = msg.text.get_rect(center=msg.rect.center)
-            self.y -= 100*x
+            self.y -= 50*x
 
 
 

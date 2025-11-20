@@ -267,14 +267,13 @@ def string_naar_bits(string, woord_naar_ascii):
             
         
         
-    return '10000001' + str(string_naar_ham(woord))+'11111111'
+    return '10000001' + str(string_naar_ham(woord))+'11111111' 
 
 
         
-type_bericht, tekst  = bits_naar_string('1000000101010000010111111111',ascii_naar_woord)
+type_bericht, tekst  = bits_naar_string('1000000111010001010001011010001101000010101001011010100111001111111111',ascii_naar_woord)
 print(type_bericht)
 print(tekst)
 
 
 print(string_naar_bits('check_klopt_niet.', woord_naar_ascii))
-
