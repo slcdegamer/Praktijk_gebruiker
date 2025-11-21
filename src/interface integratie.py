@@ -111,8 +111,11 @@ class Central():
             color = GRIJS
             self.y -=50
         central.sendmessage.append(Textbox(tekst,x,self.y,300,50,False,True,color))
-        
-        ser.write((string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n").encode()) #de regel die de bits naar het bord verstuurt 
+        if type == 'send':
+            ser.write((string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n").encode()) #de regel die de bits naar het bord verstuurt
+            print(tekst)
+            print(string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n")
+
         self.y += 100
         if self.y > 500:
            central.movemessages("down") 
@@ -147,6 +150,10 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_position = pygame.mouse.get_pos()
             central.buttonpress(mouse_position)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                print("Pijltje omhoog ingedrukt!")
+                ser.write(('a').encode())
         if event.type == pygame.MOUSEWHEEL:
             if event.y > 0:
                 central.movemessages("up")
@@ -169,13 +176,16 @@ while True:
             bericht = False 
             
             #als bericht ontvangen via het bordje dan wordt dit testbericht verstuurt
-            woord,woord2=bits_naar_string('1000000101010000010111111111',ascii_naar_woord) 
-            central.sendmessages(woord,'ding')
+            #woord,woord2=bits_naar_string(line,ascii_naar_woord) 
+            #central.sendmessages(woord,'ding')
             
             # dit hieronder is de echte code 
-            #type_bericht,tekst = bits_naar_string(line,ascii_naar_woord)
-            #if type_bericht == 'bericht':
-                #central.sendmessages(tekst,'ding')
+            type_bericht,tekst = bits_naar_string(line,ascii_naar_woord)
+            
+            if  tekst == 'error':
+                print('FOUT')
+            if type_bericht == 'bericht' and tekst!= 'error':
+                central.sendmessages(tekst,'ding')
 
         if line =='Bericht': 
             bericht = True

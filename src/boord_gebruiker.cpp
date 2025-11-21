@@ -8,7 +8,9 @@ std::string text = "00000000";
 String  tekst = text.c_str();
 char lezen = '0';
 int sensorValue= 1000;
-char gelezen = '0';       
+char gelezen = '0';    
+bool begon = false; 
+int i = 0;
 
 void setup() {
   pinMode(4, OUTPUT);
@@ -34,25 +36,33 @@ void loop() {
   
   String tekst = text.c_str();
   Serial.println(tekst);
-  if(tekst=="10000001"){lezen = '1';
-    Serial.println("tekst"); 
-  }
-  int start = tekst.length() - 4;
-  String laatste4 = tekst.substring(start, tekst.length());
-  delay(500);
+  if(tekst=="10000001"){lezen = '1';Serial.println("tekst"); begon = true;}
   
-  if(laatste4 == "1111" and lezen == '1'){Serial.println("Bericht");Serial.println(tekst);text = "00000000";lezen = '0';}
+  //int delayd = 100;
+  //int start2 = tekst.length() - 2;
+  //String laatste2 = tekst.substring(start2, tekst.length());
+
+  //if(laatste2 == "11" && begon == false){delayd=150;Serial.println("vertraagd");}
+  
+  int start = tekst.length() - 8;
+  String laatste4 = tekst.substring(start, tekst.length());
+  delay(1000);
+  Serial.println(i);
+  i=i+1;
+
+  
+  if(laatste4 == "11111111" and lezen == '1'){Serial.println("Bericht");Serial.println(tekst);text = "00000000";lezen = '0';begon = true;}
   
   while(Serial.available()>0){
     output = Serial.readStringUntil('\n');
     //Serial.println(output);
-    Serial.println("TEKST");
-
+    //Serial.println("TEKST");
+    if(output == "a"){delay(500);Serial.println("DELAY");}
     for (int i = 0; i<output.length(); i+=1){
       char bit = output[i];
       if(bit == '1'){digitalWrite(4, HIGH);}
       else { digitalWrite(4, LOW);}
-      delay(500);
+      delay(100);
     }
   }
   digitalWrite(4, LOW);

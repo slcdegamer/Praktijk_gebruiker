@@ -226,24 +226,28 @@ def bits_naar_string(bits,ascii_dict):
     tekst_woord=''
     for bit in bits:
         byte = byte + bit 
+        
         if len(byte) == 8: 
+            byte_vertaald = 'error'
             
             if byte in ascii_dict:
                 byte_vertaald = ascii_dict[byte]
+            else: byte_vertaald = 'error'
             
             if tekst == True:
                 if byte_vertaald == 'eind':
                     return type_bericht, tekst_woord
                 tekst_woord = tekst_woord + byte_vertaald
-
-            if byte_vertaald=='bericht':
+            if byte_vertaald=='error':
+                return 'bericht','error'
+            elif byte_vertaald=='bericht':
                 type_bericht = byte_vertaald
                 tekst = True
             elif byte_vertaald == 'check_vraag' or byte_vertaald == 'check_klopt' or byte_vertaald == 'check_klopt_niet':
                 type_bericht = byte_vertaald
                 return type_bericht, tekst_woord
             byte=''
-    return type_bericht, tekst_woord
+    return type_bericht, tekst_woord if tekst_woord != '' else 'error'
 
 #deze gaat iets anders. in de functie worden alleen de naam en de tekst van bericht omgezet. de rest wordt buiten de functie eraan geplakt(maar die code bestaat nog niet)
 def string_naar_bits(string, woord_naar_ascii):
@@ -267,13 +271,15 @@ def string_naar_bits(string, woord_naar_ascii):
             
         
         
-    return '10000001' + str(string_naar_ham(woord))+'11111111' 
+    return '10000001' + str(string_naar_ham(woord))+'011111111' 
 
 
         
-type_bericht, tekst  = bits_naar_string('1000000111010001010001011010001101000010101001011010100111001111111111',ascii_naar_woord)
+type_bericht, tekst  = bits_naar_string('1000000111100000011111111',ascii_naar_woord)
+print(pariteitbits_gever('10000001110100010100011101111011011111011111111'))
 print(type_bericht)
 print(tekst)
 
 
-print(string_naar_bits('check_klopt_niet.', woord_naar_ascii))
+print(string_naar_bits('bericht.ok', woord_naar_ascii))
+print(pariteitbits_gever('1000000111010001010001110111101101011011111111'))

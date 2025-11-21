@@ -79,8 +79,10 @@ def ham_naar_string(ham):
         i+=1
         x=x*2 
 
-     
+    
     if fout>0: #verkeerde bit wordt aangepast 
+        if fout>len(ham_lijst):
+            fout = len(ham_lijst)-1
         if ham_lijst[fout-1]=='1':
             ham_lijst[fout-1]='0'
         else: ham_lijst[fout-1]='1'
@@ -124,4 +126,4 @@ def pariteitbits_gever(ham):
         string = string + str(bit)
     return string
 
-    
+
