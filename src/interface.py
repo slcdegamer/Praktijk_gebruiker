@@ -1,10 +1,11 @@
 import time
 import sys
 import select
+import serial
 import pygame 
 pygame.init()
 from bits_naar_string import *
-import msvcrt
+#import msvcrt
 
 breedte, hoogte = 800, 600
 screen = pygame.display.set_mode((breedte, hoogte))
@@ -40,7 +41,8 @@ class Button:
         screen.blit(self.tekst,self.text_rect)
 
 class Textbox:
-    def __init__(self,tekst,x,y,width,hight,typable,status,color):
+    def __init__(self,status_draw,tekst,x,y,width,hight,typable,status,color):
+        self.status_draw=status_draw
         self.text_string = tekst
         self.text = font1.render(self.text_string,True,WHITE)
         self.y = y
@@ -54,8 +56,9 @@ class Textbox:
         self.file_path2_ontvang = "ontvangenberichten.txt"
         self.color = color
     def draw(self,screen):
-        pygame.draw.rect(screen, self.color, self.rect)
-        screen.blit(self.text,self.text_rect)
+        if self.status_draw == True:
+            pygame.draw.rect(screen, self.color, self.rect)
+            screen.blit(self.text,self.text_rect)
     def updatetext(self):
         self.text = font1.render(self.text_string, True, WHITE)
         self.text_rect = self.text.get_rect(center=self.rect.center)
@@ -68,28 +71,34 @@ class Textbox:
                 file.write(tekst + "\n")
                 print("txt file was created")
                 self.opgeslagentextself = []
+                ser.write((string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n").encode()) #de regel die de bits naar het bord verstuurt
+                central.huidige_pariteitbit=pariteitbits_gever(string_naar_bits('bericht.'+tekst,woord_naar_ascii))
+                print('bericht wordt verstuurd...')
         self.text_string = ""
 
-    def anderekantopslaan(self):
+    def anderekantopslaan(self,tekst):
+        self.text_string=tekst
         central.sendmessages(self.text_string, "send")
         self.opgeslagentextander.append(self.text_string)
         with open(self.file_path2_ontvang, "a") as file:
             for tekst in self.opgeslagentextander:
                 file.write(tekst + "\n")
                 self.opgeslagentextander = []
+                
         self.text_string = ""
-
 
     def binnengekregentext(self):
         with open(self.file_path2_ontvang, "r") as file2:
             for line in file2:
-                central.sendmessages(line, "send")
+                central.sendmessages(line, None)
         with open(self.file_path_verstuur, "r") as file2:
             for line in file2:
-                central.sendmessages(line, None)
+                central.sendmessages(line, 'inladen')
 
-class Central():
+class Central:
     def __init__(self):
+        self.huidige_pariteitbit=''
+        self.status_huidig_bericht = False
         self.users = []
         self.buttons = []
         self.textboxes = []
@@ -125,13 +134,19 @@ class Central():
         if type == "send":
             x = 450
             color = LBLAUW
-            self.y -=50
+            self.y +=50
+            central.sendmessage.append(Textbox(False,tekst,x,self.y,300,50,False,True,color))
+        elif type == 'inladen':
+            x = 450
+            color = LBLAUW
+            self.y +=50
+            central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color))
         else:
             x = 10 
             color = GRIJS
-            self.y -=50
-        central.sendmessage.append(Textbox(tekst,x,self.y,300,50,False,True,color))
-        self.y += 100
+            self.y +=50
+            central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color))
+        self.y += 10
         if self.y > 500:
            central.movemessages("down") 
            
@@ -151,10 +166,12 @@ class Central():
 central = Central()
 central.buttons.append(Button("Start", (350, 350, 100,100),True, LBLAUW))
 central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
-central.textboxes.append(Textbox("",0, 460, 800,50,True,False,GRIJS))
+central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS))
 
 central.textboxes[0].binnengekregentext()
-
+ser = serial.Serial('/dev/tty.usbserial-120', 9600, timeout=1)
+bericht= False
+bericht_gechecked = True
 
 while True:
     for event in pygame.event.get():
@@ -168,6 +185,10 @@ while True:
                 central.movemessages("up")
             else:
                 central.movemessages("down")
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                print("Pijltje omhoog ingedrukt!")
+                ser.write(('a').encode())
         if event.type == pygame.KEYDOWN and central.textboxes[0].status == True:
             if event.key == pygame.K_BACKSPACE:
                 central.textboxes[0].text_string = central.textboxes[0].text_string[:-1]
@@ -175,11 +196,59 @@ while True:
                 central.buttons[1].status = True
                 central.textboxes[0].status = False
                 central.textboxes[0].opslaan()
+                
             else:
                 central.textboxes[0].text_string += event.unicode
             central.textboxes[0].updatetext()
         
-        screen.fill(WHITE)
+    if ser.in_waiting > 0: #als er iets verstuurt is dan leest hij dit. 
+        line = ser.readline().decode('utf-8').strip()
+        if bericht == True:
+            bericht = False
+            type_bericht,tekst = bits_naar_string(line,ascii_naar_woord)
+            
+            if  tekst == 'error' and type_bericht != 'check_klopt' and type_bericht != 'check_klopt_niet' or tekst == '' and type_bericht != 'check_klopt' and type_bericht != 'check_klopt_niet':
+                print('signaal verkeerd ontvangen...')
+                
+            if type_bericht == 'bericht' and tekst!= 'error':
+                
+                if bericht_gechecked == False:
+                    central.sendmessage[-1].status_draw=True
+                    central.sendmessage[-1].text=font1.render('bericht niet juist geladen',True,WHITE)
+                    text_rect = central.sendmessage[-1].text.get_rect(center=central.sendmessage[-1].rect.center)
+                    
+               
+                central.status_huidig_bericht = False
+                central.textboxes[0].anderekantopslaan(tekst)
+                time.sleep(1)
+                ser.write((string_naar_bits('check_vraag.'+pariteitbits_gever(line), woord_naar_ascii) + "\n").encode())
+                print('Bericht ontvangen! check wordt verstuurd')
+                bericht_gechecked=False
+                
+            elif type_bericht == 'check_klopt':
+                central.sendmessage[-1].status_draw=True
+                bericht_gechecked = True
+                print('Correct bericht ontvangen!')
+            elif type_bericht == 'check_klopt_niet':
+                central.sendmessage.remove(central.sendmessage[-1])
+                bericht_gechecked = True
+                print('Fout bericht ontvangen...')
+            elif type_bericht == 'check_vraag':
+                if tekst == central.huidige_pariteitbit:
+                    ser.write((string_naar_bits('check_klopt.', woord_naar_ascii) + "\n").encode())
+                    print('Check klopt!')
+                else: 
+                    ser.write((string_naar_bits('check_niet.', woord_naar_ascii) + "\n").encode())
+                    print('Check klopt niet...')
+            
+
+        if line =='Bericht': 
+            bericht = True
+        
+        if line != '00000000':
+            print(line)
+    screen.fill(WHITE)
+
 
     central.updatebuttons(screen)
     pygame.display.flip()

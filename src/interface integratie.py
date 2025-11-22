@@ -1,6 +1,4 @@
-import time
-import sys
-import select
+
 import serial
 import pygame 
 pygame.init()
@@ -138,7 +136,7 @@ central.buttons.append(Button("Start", (350, 350, 100,100),True, LBLAUW))
 central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox("",0, 460, 800,50,True,False,GRIJS))
 
-ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
+ser = serial.Serial('/dev/tty.usbserial-120', 9600, timeout=1)
 bericht= False
 
 
@@ -193,7 +191,7 @@ while True:
         if line != '00000000':
             print(line)
 
-        screen.fill(WHITE)
+    screen.fill(WHITE)
 
     central.updatebuttons(screen)
     pygame.display.flip()

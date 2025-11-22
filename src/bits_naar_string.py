@@ -215,10 +215,11 @@ woord_naar_ascii = {
 
 #functie returned de type bericht, naam en eventuele tekst. als er geen tekst is (want bijvoorbeeld een gebruiker_online bericht) dan wordt er 0 gereturned 
 def bits_naar_string(bits,ascii_dict):
-    bits = bits[:-8]
-    for i in range(8):
-        bits = bits[:0] + bits[1:]
+    bits = bits[:-9]
+    bits = bits[8:]
+   
     bits = ham_naar_string(bits)
+  
     byte=''
     type_bericht = '' 
     
@@ -226,12 +227,13 @@ def bits_naar_string(bits,ascii_dict):
     tekst_woord=''
     for bit in bits:
         byte = byte + bit 
-        
+   
         if len(byte) == 8: 
             byte_vertaald = 'error'
             
             if byte in ascii_dict:
                 byte_vertaald = ascii_dict[byte]
+            
             else: byte_vertaald = 'error'
             
             if tekst == True:
@@ -243,7 +245,10 @@ def bits_naar_string(bits,ascii_dict):
             elif byte_vertaald=='bericht':
                 type_bericht = byte_vertaald
                 tekst = True
-            elif byte_vertaald == 'check_vraag' or byte_vertaald == 'check_klopt' or byte_vertaald == 'check_klopt_niet':
+            elif byte_vertaald == 'check_vraag':
+                bits = bits[8:]
+                return byte_vertaald, bits
+            elif  byte_vertaald == 'check_klopt' or byte_vertaald == 'check_klopt_niet':
                 type_bericht = byte_vertaald
                 return type_bericht, tekst_woord
             byte=''
@@ -265,21 +270,15 @@ def string_naar_bits(string, woord_naar_ascii):
             
             type_bericht= type_bericht + letter
             if letter == '.':
-                stop = True 
+                stop = True  
                 woord = woord + woord_naar_ascii[type_bericht]
+                if type_bericht == 'check_vraag.':
+                    string = string[12:]
+                    
+                    return '10000001' + str(string_naar_ham(woord+string))+'011111111' 
             
-            
-        
-        
     return '10000001' + str(string_naar_ham(woord))+'011111111' 
 
 
-        
-type_bericht, tekst  = bits_naar_string('1000000111100000011111111',ascii_naar_woord)
-print(pariteitbits_gever('10000001110100010100011101111011011111011111111'))
-print(type_bericht)
-print(tekst)
-
-
-print(string_naar_bits('bericht.ok', woord_naar_ascii))
-print(pariteitbits_gever('1000000111010001010001110111101101011011111111'))
+print(string_naar_bits('check_vraag.101101', woord_naar_ascii))
+print(bits_naar_string('100000011100000100101010101011111111',ascii_naar_woord))
