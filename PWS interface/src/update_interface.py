@@ -90,9 +90,13 @@ class Textbox:
     def binnengekregentext(self):
         with open(self.file_path2_ontvang, "r") as file2:
             for line in file2:
+                if '\n' in line:
+                    line = line[:-1]
                 central.sendmessages(line, None)
         with open(self.file_path_verstuur, "r") as file2:
             for line in file2:
+                if '\n' in line:
+                    line = line[:-1]
                 central.sendmessages(line, 'inladen')
 
 class Central:
@@ -115,7 +119,7 @@ class Central:
         for button in self.buttons:
             if button.status == True:
                 button.draw(screen)
-        if self.buttons[1].status == False:
+        if self.buttons[0].status == False:
             self.textboxes[0].status = True
         pygame.draw.rect(screen, DGRIJS,(0, 510, 800,600))
         for textbox in self.textboxes:
@@ -133,17 +137,17 @@ class Central:
     def sendmessages(self, tekst,type):
         if type == "send":
             x = 450
-            color = LBLAUW
+            color = GRIJS
             self.y +=50
             central.sendmessage.append(Textbox(False,tekst,x,self.y,300,50,False,True,color))
         elif type == 'inladen':
             x = 450
-            color = LBLAUW
+            color = GRIJS
             self.y +=50
             central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color))
         else:
             x = 10 
-            color = GRIJS
+            color = LBLAUW
             self.y +=50
             central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color))
         self.y += 10
@@ -164,12 +168,14 @@ class Central:
 
 
 central = Central()
-central.buttons.append(Button("Start", (350, 350, 100,100),True, LBLAUW))
+
 central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS))
 
 central.textboxes[0].binnengekregentext()
-ser = serial.Serial('/dev/tty.usbserial-120', 9600, timeout=1)
+ser = serial.Serial('/dev/tty.usbserial-14110', 9600, timeout=1) #pas dit aan naar je eigen port
+time.sleep(2)  # laat ESP opstarten
+ser.reset_input_buffer()
 bericht= False
 bericht_gechecked = True
 
@@ -193,10 +199,9 @@ while True:
             if event.key == pygame.K_BACKSPACE:
                 central.textboxes[0].text_string = central.textboxes[0].text_string[:-1]
             elif event.key == pygame.K_RETURN:
-                central.buttons[1].status = True
+                central.buttons[0].status = True
                 central.textboxes[0].status = False
                 central.textboxes[0].opslaan()
-                
             else:
                 central.textboxes[0].text_string += event.unicode
             central.textboxes[0].updatetext()

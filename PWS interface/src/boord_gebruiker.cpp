@@ -35,8 +35,12 @@ void loop() {
   //Serial.println(sensorValue);
   
   String tekst = text.c_str();
-  Serial.println(tekst);
-  if(tekst=="10000001"){lezen = '1';Serial.println("tekst"); begon = true;}
+  
+  //Serial.println(tekst);
+  if(tekst=="10000001")
+    {lezen = '1';
+    //Serial.println("tekst"); 
+    begon = true;}
   
   int start = tekst.length() - 8;
   String laatste4 = tekst.substring(start, tekst.length());

@@ -136,7 +136,7 @@ central.buttons.append(Button("Start", (350, 350, 100,100),True, LBLAUW))
 central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox("",0, 460, 800,50,True,False,GRIJS))
 
-ser = serial.Serial('/dev/tty.usbserial-120', 9600, timeout=1)
+ser = serial.Serial('/dev/tty.usbserial-14110', 115200, timeout=1)
 bericht= False
 
 

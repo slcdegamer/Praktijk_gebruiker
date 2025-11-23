@@ -169,7 +169,9 @@ central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS))
 
 central.textboxes[0].binnengekregentext()
-ser = serial.Serial('/dev/tty.usbserial-120', 9600, timeout=1)
+ser = serial.Serial('/dev/tty.usbserial-14110', 9600, timeout=1)
+time.sleep(2)  # laat ESP opstarten
+ser.reset_input_buffer()
 bericht= False
 bericht_gechecked = True
 
