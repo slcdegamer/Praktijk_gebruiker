@@ -185,7 +185,11 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 print("Pijltje omhoog ingedrukt!")
-                ser.write(('a').encode())
+                ser.write(('a\n').encode())
+            if event.key ==  pygame.K_DOWN:
+                ser.write(('b\n').encode())
+                print("Pijltje omlaag ingedrukt!")
+         
         if event.type == pygame.KEYDOWN and central.textboxes[0].status == True:
             if event.key == pygame.K_BACKSPACE:
                 central.textboxes[0].text_string = central.textboxes[0].text_string[:-1]
@@ -233,7 +237,7 @@ while True:
                     ser.write((string_naar_bits('check_klopt.', woord_naar_ascii) + "\n").encode())
                     print('Check klopt!')
                 else: 
-                    ser.write((string_naar_bits('check_niet.', woord_naar_ascii) + "\n").encode())
+                    ser.write((string_naar_bits('check_klopt_niet.', woord_naar_ascii) + "\n").encode())
                     print('Check klopt niet...')
             
 
