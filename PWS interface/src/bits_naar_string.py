@@ -1,6 +1,4 @@
 from hamming_code import *
-
-
 ascii_naar_woord = {
     '10000001':'start',
     '00000010':'check_vraag',
@@ -105,7 +103,6 @@ ascii_naar_woord = {
     '01111101': '}',
     '01111110': '~'
 }
-
 woord_naar_ascii = {
     'start': '10000001',
     'check_vraag.': '00000010',
@@ -213,72 +210,67 @@ woord_naar_ascii = {
 
 #opbouw van een byte: plek 1: start. plek 2: type bericht ('bericht, check_vraag, check_klopt, check_klopt). plek 3 als het een bericht is: inhoud bericht. plek 4: stop  
 
-#functie returned de type bericht, naam en eventuele tekst. als er geen tekst is (want bijvoorbeeld een gebruiker_online bericht) dan wordt er 0 gereturned 
+#functie returned de type bericht en eventuele tekst. Als er geen tekst is dan returned het niks. 
 def bits_naar_string(bits,ascii_dict):
-    bits = bits[:-9]
+    bits = bits[:-9] #haalt stop en start byte aan de voor en achterkant weg 
     bits = bits[8:]
-   
-    bits = ham_naar_string(bits)
+    bits = ham_naar_string(bits) #maakt van de gehamde string weer de plaintext 
   
     byte=''
     type_bericht = '' 
-    
     tekst=False
     tekst_woord=''
+
     for bit in bits:
         byte = byte + bit 
    
         if len(byte) == 8: 
             byte_vertaald = 'error'
             
-            if byte in ascii_dict:
+            if byte in ascii_dict: #als de byte niet in de lijst zit, dan wordt byte_vertaald niet aangepast en blijft het een error
                 byte_vertaald = ascii_dict[byte]
-            
             else: byte_vertaald = 'error'
             
             if tekst == True:
                 if byte_vertaald == 'eind':
                     return type_bericht, tekst_woord
                 tekst_woord = tekst_woord + byte_vertaald
+            
             if byte_vertaald=='error':
                 return 'bericht','error'
-            elif byte_vertaald=='bericht':
+            elif byte_vertaald=='bericht': #bij bericht moet er wel data achter de header, dus gaat de functie door 
                 type_bericht = byte_vertaald
                 tekst = True
-            elif byte_vertaald == 'check_vraag':
-                bits = bits[8:]
+            elif byte_vertaald == 'check_vraag': # bij check_vraag zijn de tekst bits niet omgezet naar ascii, omdat het toch al enen en nullen zijn, dus worden de bits gelijk gereturned 
+                bits = bits[8:] 
                 return byte_vertaald, bits
-            elif  byte_vertaald == 'check_klopt' or byte_vertaald == 'check_klopt_niet':
+            elif  byte_vertaald == 'check_klopt' or byte_vertaald == 'check_klopt_niet': #bij check_klopt en check_klopt hoeft geen data achter de header, dus stop de functie gelijk 
                 type_bericht = byte_vertaald
                 return type_bericht, tekst_woord
             byte=''
     return type_bericht, tekst_woord if tekst_woord != '' else 'error'
 
 #deze gaat iets anders. in de functie worden alleen de naam en de tekst van bericht omgezet. de rest wordt buiten de functie eraan geplakt(maar die code bestaat nog niet)
+# het type bericht en de tekst wordt gehammed en de start en eind codons worden eromheen gezet. 
 def string_naar_bits(string, woord_naar_ascii):
 
     type_bericht = ''
     woord=''
-    stop = False
+    tekst = False
+
     for letter in string: 
-        if stop == True:
-            
+        if tekst == True:
             letter = woord_naar_ascii[letter]
-            
             woord = woord + letter
-        if stop == False:
-            
+
+        if tekst == False:
             type_bericht= type_bericht + letter
-            if letter == '.':
-                stop = True  
+            if letter == '.': #elke soort type bericht eindigt met een '.' om het type bericht met de tekst te scheiden zodat de functie niet elke individuele letter vna het type bericht gaat vertalen maar het hele woord. 
+                tekst = True  
                 woord = woord + woord_naar_ascii[type_bericht]
-                if type_bericht == 'check_vraag.':
+                if type_bericht == 'check_vraag.': # bij check_vraag worden de enen en nullen niet vertaald naar ascii omdat het toch al enen en nullen zijn. het bericht wordt dan onnodig langer. 
                     string = string[12:]
-                    
                     return '10000001' + str(string_naar_ham(woord+string))+'011111111' 
             
     return '10000001' + str(string_naar_ham(woord))+'011111111' 
 
-
-print(string_naar_bits('check_vraag.101101', woord_naar_ascii))
-print(bits_naar_string('100000011100000100101010101011111111',ascii_naar_woord))
