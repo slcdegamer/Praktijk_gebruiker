@@ -9,7 +9,7 @@ from bits_naar_string import *
 
 breedte, hoogte = 800, 600
 screen = pygame.display.set_mode((breedte, hoogte))
-pygame.display.set_caption("Mijn eerste Pygame")
+pygame.display.set_caption("Interface")
 clock = pygame.time.Clock()
 
 ZWART= (0,0,0)
@@ -17,17 +17,9 @@ WHITE= (255,255,255)
 LBLAUW = (0,191,255)
 GRIJS = (169,169,169)
 DGRIJS = (40,40,40)
-#To do: Textbox class, centrale class, systeem met users, chatrooms.
+
 font1 = pygame.font.Font(None,25)
 text_surface = font1.render('hoi',True,WHITE)
-
-
-# Pas dit aan naar jouw seriële poort:
-#ser = serial.Serial('COM3', 9600, timeout=1)
-
-#print('wacht')
-#time.sleep(3)  # wacht even tot de poort klaar isk
-#print('klaar')
 
 class Button:
     def __init__(self, tekst, rect, status, kleur):
@@ -110,7 +102,6 @@ class Central:
         self.x = 10
         self.y = 50
 
-        
     def updatebuttons(self,screen): #Kijkt welke knop getekent moet worden.
 
         for sendmessage in self.sendmessage:
@@ -173,8 +164,8 @@ central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS))
 
 central.textboxes[0].binnengekregentext()
-ser = serial.Serial('/dev/tty.usbserial-14110', 9600, timeout=1) #pas dit aan naar je eigen port
-time.sleep(2)  # laat ESP opstarten
+ser = serial.Serial('/dev/tty.usbserial-14110', 9600, timeout=1) #pas '/dev/tty.usbserial-14110' aan naar je eigen port waar het bordje op zit aangesloten 
+time.sleep(2)  # tijd buffer om het bordje ook even op goed te laten inladen 
 ser.reset_input_buffer()
 bericht= False
 bericht_gechecked = True
@@ -194,7 +185,11 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 print("Pijltje omhoog ingedrukt!")
-                ser.write(('a').encode())
+                ser.write(('a\n').encode())
+            if event.key ==  pygame.K_DOWN:
+                ser.write(('b\n').encode())
+                print("Pijltje omlaag ingedrukt!")
+         
         if event.type == pygame.KEYDOWN and central.textboxes[0].status == True:
             if event.key == pygame.K_BACKSPACE:
                 central.textboxes[0].text_string = central.textboxes[0].text_string[:-1]
@@ -206,7 +201,7 @@ while True:
                 central.textboxes[0].text_string += event.unicode
             central.textboxes[0].updatetext()
         
-    if ser.in_waiting > 0: #als er iets verstuurt is dan leest hij dit. 
+    if ser.in_waiting > 0: #als er iets verstuurt is van het bordje en in de wachtrij staat dan leest het dit 
         line = ser.readline().decode('utf-8').strip()
         if bericht == True:
             bericht = False
@@ -221,7 +216,6 @@ while True:
                     central.sendmessage[-1].status_draw=True
                     central.sendmessage[-1].text=font1.render('bericht niet juist geladen',True,WHITE)
                     text_rect = central.sendmessage[-1].text.get_rect(center=central.sendmessage[-1].rect.center)
-                    
                
                 central.status_huidig_bericht = False
                 central.textboxes[0].anderekantopslaan(tekst)
@@ -243,7 +237,7 @@ while True:
                     ser.write((string_naar_bits('check_klopt.', woord_naar_ascii) + "\n").encode())
                     print('Check klopt!')
                 else: 
-                    ser.write((string_naar_bits('check_niet.', woord_naar_ascii) + "\n").encode())
+                    ser.write((string_naar_bits('check_klopt_niet.', woord_naar_ascii) + "\n").encode())
                     print('Check klopt niet...')
             
 
@@ -261,24 +255,5 @@ while True:
 
 
 #Buttonlogboek:
-# Pos 0: Startknop.
-# Pos 1: Typebox test
+# Pos 0: Typebox test
 
-    #if ser.in_waiting > 0: #als er iets verstuurt is dan leest hij dit. 
-        #line = ser.readline().decode('utf-8').strip()
-        
-        #if line != 'a' and line != 'b':
-            #print('string: ' + str(line))
-        #else: print('anders'+str(line))
-
-        #text_surface = font1.render(line,True,WHITE)
-        #text_rect = text_surface.get_rect(center=(400,300))
-
-    
-
-    #versuurt een string van bits naar het boord
-    #if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-        #user_input = sys.stdin.readline().strip()
-        #ser.write((user_input + "\n").encode())
-
-#Wat moet er nog gedaan worden? Functie in central de een rij van inputs laat zien, met y + 100. met de input moet nog iets worden gedaan.

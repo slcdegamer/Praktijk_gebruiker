@@ -127,5 +127,3 @@ def pariteitbits_gever(ham):
     for bit in correctie:
         string = string + str(bit)
     return string
-
-print(pariteitbits_gever('100000010101000001000100101110110000101111010101010111011111111'))
