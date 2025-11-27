@@ -1,4 +1,4 @@
-from hamming_code import *
+from hamming_code_converter import *
 ascii_naar_woord = {
     '10000001':'start',
     '00000010':'check_vraag',

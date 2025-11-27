@@ -23,6 +23,8 @@ text_rect = text_surface.get_rect(center=(400,300))
 
 # Pas dit aan naar jouw seriële poort:
 ser = serial.Serial('/dev/cu.usbserial-14110', 9600, timeout=1)
+time.sleep(2)  # tijd buffer om het bordje ook even op goed te laten inladen 
+ser.reset_input_buffer()
 
 
 bericht = False

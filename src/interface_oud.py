@@ -63,7 +63,7 @@ class Textbox:
                 file.write(tekst + "\n")
                 print("txt file was created")
                 self.opgeslagentextself = []
-                ser.write((string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n").encode()) #de regel die de bits naar het bord verstuurt
+                ser.write((string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n").encode()) 
                 central.huidige_pariteitbit=pariteitbits_gever(string_naar_bits('bericht.'+tekst,woord_naar_ascii))
                 print('bericht wordt verstuurd...')
         self.text_string = ""
@@ -102,7 +102,7 @@ class Central:
         self.x = 10
         self.y = 50
 
-    def updatebuttons(self,screen): #Kijkt welke knop getekent moet worden.
+    def updatebuttons(self,screen):
 
         for sendmessage in self.sendmessage:
             if sendmessage.status == True:
@@ -116,10 +116,12 @@ class Central:
         for textbox in self.textboxes:
             if textbox.status == True:
                 textbox.draw(screen)
-    def buttonpress(self, cords): #cycled door elke knop, of deze is geklickt
+
+    def buttonpress(self, cords):
         for button in self.buttons:
             if (button.rect.collidepoint(cords)):
                 button.status = False
+
     def textboxesChecker(self):
         for textbox in self.textboxes:
             if textbox.status == True:
@@ -146,15 +148,15 @@ class Central:
            central.movemessages("down") 
            
     def movemessages(self,richting):
-            if richting == "down":
-                x = 1
-            else:
-                x = -1
-            for msg in self.sendmessage:
-                msg.y -= 50*x
-                msg.rect.y = msg.y
-                msg.text_rect = msg.text.get_rect(center=msg.rect.center)
-            self.y -= 50*x
+        if richting == "down":
+            x = 1
+        else:
+            x = -1
+        for msg in self.sendmessage:
+            msg.y -= 50*x
+            msg.rect.y = msg.y
+            msg.text_rect = msg.text.get_rect(center=msg.rect.center)
+        self.y -= 50*x
 
 
 
@@ -164,44 +166,67 @@ central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS))
 
 central.textboxes[0].binnengekregentext()
-ser = serial.Serial('/dev/tty.usbserial-14110', 9600, timeout=1) #pas '/dev/tty.usbserial-14110' aan naar je eigen port waar het bordje op zit aangesloten 
-time.sleep(2)  # tijd buffer om het bordje ook even op goed te laten inladen 
+ser = serial.Serial('/dev/tty.usbserial-14110', 9600, timeout=1)
+time.sleep(2)
 ser.reset_input_buffer()
 bericht= False
 bericht_gechecked = True
 
+# ============================================================
+# ===================== MAIN LOOP (FIXED) =====================
+# ============================================================
+
 while True:
     for event in pygame.event.get():
+        
         if event.type == pygame.QUIT:
             pygame.quit()
+        
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_position = pygame.mouse.get_pos()
             central.buttonpress(mouse_position)
+
         if event.type == pygame.MOUSEWHEEL:
             if event.y > 0:
                 central.movemessages("up")
             else:
                 central.movemessages("down")
+
+        # ---------------------------------------------------------
+        # ------------------ ÉÉN GECOMBINEERD KEYDOWN -------------
+        # ---------------------------------------------------------
         if event.type == pygame.KEYDOWN:
+
+            # --------- Eerst pijltjes ----------
             if event.key == pygame.K_UP:
                 print("Pijltje omhoog ingedrukt!")
-                ser.write(('a\n').encode())
-            if event.key ==  pygame.K_DOWN:
-                ser.write(('b\n').encode())
+                ser.write(b"b\n")
+                continue
+
+            if event.key == pygame.K_DOWN:
                 print("Pijltje omlaag ingedrukt!")
-         
-        if event.type == pygame.KEYDOWN and central.textboxes[0].status == True:
-            if event.key == pygame.K_BACKSPACE:
-                central.textboxes[0].text_string = central.textboxes[0].text_string[:-1]
-            elif event.key == pygame.K_RETURN:
-                central.buttons[0].status = True
-                central.textboxes[0].status = False
-                central.textboxes[0].opslaan()
-            else:
-                central.textboxes[0].text_string += event.unicode
-            central.textboxes[0].updatetext()
-        
-    if ser.in_waiting > 0: #als er iets verstuurt is van het bordje en in de wachtrij staat dan leest het dit 
+                ser.write(b"a\n")
+                continue
+
+            # --------- Dan textbox handling ----------
+            if central.textboxes[0].status == True:
+
+                if event.key == pygame.K_BACKSPACE:
+                    central.textboxes[0].text_string = central.textboxes[0].text_string[:-1]
+
+                elif event.key == pygame.K_RETURN:
+                    central.buttons[0].status = True
+                    central.textboxes[0].status = False
+                    central.textboxes[0].opslaan()
+
+                else:
+                    if event.unicode.isprintable():
+                        central.textboxes[0].text_string += event.unicode
+
+                central.textboxes[0].updatetext()
+
+    # ------------------ SERIAL HANDLING ----------------------
+    if ser.in_waiting > 0:
         line = ser.readline().decode('utf-8').strip()
         if bericht == True:
             bericht = False
@@ -228,10 +253,12 @@ while True:
                 central.sendmessage[-1].status_draw=True
                 bericht_gechecked = True
                 print('Correct bericht ontvangen!')
+
             elif type_bericht == 'check_klopt_niet':
                 central.sendmessage.remove(central.sendmessage[-1])
                 bericht_gechecked = True
                 print('Fout bericht ontvangen...')
+
             elif type_bericht == 'check_vraag':
                 if tekst == central.huidige_pariteitbit:
                     ser.write((string_naar_bits('check_klopt.', woord_naar_ascii) + "\n").encode())
@@ -246,14 +273,8 @@ while True:
         
         if line != '00000000':
             print(line)
+
     screen.fill(WHITE)
-
-
     central.updatebuttons(screen)
     pygame.display.flip()
     clock.tick(60)
-
-
-#Buttonlogboek:
-# Pos 0: Typebox test
-
