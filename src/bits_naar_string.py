@@ -215,10 +215,9 @@ woord_naar_ascii = {
 
 #functie returned de type bericht, naam en eventuele tekst. als er geen tekst is (want bijvoorbeeld een gebruiker_online bericht) dan wordt er 0 gereturned 
 def bits_naar_string(bits,ascii_dict):
-    bits = bits[:-9]
+    bits = bits[:-9] #knipt de achterste 1tjes uit
     bits = bits[8:]
-   
-    bits = ham_naar_string(bits)
+    bits = ham_naar_string(bits) #roepthamming code op... Kan dit misschien in 1 file?
   
     byte=''
     type_bericht = '' 
@@ -280,5 +279,6 @@ def string_naar_bits(string, woord_naar_ascii):
     return '10000001' + str(string_naar_ham(woord))+'011111111' 
 
 
-print(string_naar_bits('check_vraag.101101', woord_naar_ascii))
+
+print(string_naar_bits('check_vraag.101101', woord_naar_ascii,),'test')
 print(bits_naar_string('100000011100000100101010101011111111',ascii_naar_woord))
