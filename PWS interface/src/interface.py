@@ -6,6 +6,12 @@ import pygame
 pygame.init()
 from berichten_converter import *
 #import msvcrt
+import serial.tools.list_ports
+
+ports = serial.tools.list_ports.comports() #autodetect welke port
+for port in ports:
+    port = port.device
+
 
 breedte, hoogte = 800, 600
 screen = pygame.display.set_mode((breedte, hoogte))
@@ -164,7 +170,7 @@ central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
 central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS))
 
 central.textboxes[0].binnengekregentext()
-ser = serial.Serial('/dev/tty.usbserial-14110', 9600, timeout=1) #pas '/dev/tty.usbserial-14110' aan naar je eigen port waar het bordje op zit aangesloten 
+ser = serial.Serial(port, 9600, timeout=1) #pas '/dev/tty.usbserial-14110' aan naar je eigen port waar het bordje op zit aangesloten 
 time.sleep(2)  # tijd buffer om het bordje ook even op goed te laten inladen 
 ser.reset_input_buffer()
 bericht= False
