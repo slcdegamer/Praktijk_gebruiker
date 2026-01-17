@@ -11,7 +11,7 @@ import serial.tools.list_ports
 ports = serial.tools.list_ports.comports() #autodetect welke port
 for port in ports:
     port = port.device
-
+#hopelijk werkt dit
 
 breedte, hoogte = 800, 600
 screen = pygame.display.set_mode((breedte, hoogte))
