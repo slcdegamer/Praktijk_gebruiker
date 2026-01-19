@@ -39,17 +39,18 @@ class Button:
         screen.blit(self.tekst,self.text_rect)
 
 class Textbox:
-    def __init__(self,status_draw,tekst,x,y,width,hight,typable,status,color):
+    def __init__(self,status_draw,tekst,x,y,width,hight,typable,status,color,time):
+        self.time = time
         self.status_draw=status_draw
         self.text_string = tekst
         self.text = font1.render(self.text_string,True,WHITE)
         self.y = y
         self.rect = pygame.Rect((x,self.y,width,hight))
         self.text_rect = self.text.get_rect(center=self.rect.center)
+        self.time_text = font1.render(self.time, True, WHITE)
+        self.time_text_rect = self.time_text.get_rect()
         self.status = status
         self.typable = typable
-        self.opgeslagentextself = []
-        self.opgeslagentextander = []
         self.file_path_verstuur = "deberichten.txt"
         self.file_path2_ontvang = "ontvangenberichten.txt"
         self.color = color
@@ -57,45 +58,54 @@ class Textbox:
         if self.status_draw == True:
             pygame.draw.rect(screen, self.color, self.rect)
             screen.blit(self.text,self.text_rect)
+            screen.blit(self.time_text, self.time_text_rect)
+            self.time_text_rect.bottomright = ( self.rect.right - 5,self.rect.bottom - 5)
     def updatetext(self):
-        self.text = font1.render(self.text_string, True, WHITE)
+        self.text = font1.render(self.text_string,True,WHITE)
         self.text_rect = self.text.get_rect(center=self.rect.center)
         self.text_rect.w = max(100, text_surface.get_width()+10)
-    def opslaan(self):
-        central.sendmessages(self.text_string, "None")
-        self.opgeslagentextself.append(self.text_string)
-        with open(self.file_path_verstuur, "a") as file:
-            for tekst in self.opgeslagentextself:
-                file.write(tekst + "\n")
-                print("txt file was created")
-                self.opgeslagentextself = []
-                ser.write((string_naar_bits('bericht.'+tekst, woord_naar_ascii) + "\n").encode()) #de regel die de bits naar het bord verstuurt
-                central.huidige_pariteitbit=pariteitbits_gever(string_naar_bits('bericht.'+tekst,woord_naar_ascii))
-                print('bericht wordt verstuurd...')
-        self.text_string = ""
+        self.time_text = font1.render(self.time, True, WHITE)
+        self.time_text_rect = self.time_text.get_rect()
+    def opslaan_zelf(self,time):
+        central.sendmessages(self.text_string, "self",time) 
+        with open(self.file_path_verstuur, "a") as file: 
+            file.write(self.text_string + "%@%" + time +"\n") 
+            ser.write((string_naar_bits('bericht.'+self.text_string, woord_naar_ascii) +"%@%" + time+ "\n").encode()) #de regel die de bits naar het bord verstuurt 
+            central.huidige_pariteitbit=pariteitbits_gever(string_naar_bits('bericht.'+self.text_string,woord_naar_ascii)) 
+            print('bericht wordt verstuurd...') 
+            self.text_string = "" 
 
-    def anderekantopslaan(self,tekst):
-        self.text_string=tekst
-        central.sendmessages(self.text_string, "send")
-        self.opgeslagentextander.append(self.text_string)
+    def opslaan_van_buiten(self,tekst):
+        central.sendmessages(tekst, "incomming")
+        self.opgeslagentextander.append(tekst)
         with open(self.file_path2_ontvang, "a") as file:
-            for tekst in self.opgeslagentextander:
-                file.write(tekst + "\n")
-                self.opgeslagentextander = []
-                
+                file.write(tekst + "%@%" + time.strftime("%H:%M") + "\n")
         self.text_string = ""
 
     def binnengekregentext(self):
+        """
+        Format met lines: bericht %@% tijd \n
+        """
         with open(self.file_path2_ontvang, "r") as file2:
+            time = "none"
             for line in file2:
-                if '\n' in line:
+                if '%@%' in line:
+                    time = line[len(line)-6:len(line)-1] #Hier zit nog een kleine bug tussen, weet niet wat
+                    line = line[:len(line)-9]                    
+                elif '\n' in line:
                     line = line[:-1]
-                central.sendmessages(line, None)
+                    time = 'none'
+                central.sendmessages(line, None,time)
         with open(self.file_path_verstuur, "r") as file2:
+            time = "none"
             for line in file2:
-                if '\n' in line:
+                if '%@%' in line:
+                    time = line[len(line)-6:len(line)-1]
+                    line = line[:len(line)-9]                   
+                elif '\n' in line:
                     line = line[:-1]
-                central.sendmessages(line, 'inladen')
+                    time = "none"    
+                central.sendmessages(line,'self',time)
 
 class Central:
     def __init__(self):
@@ -109,7 +119,6 @@ class Central:
         self.y = 50
 
     def updatebuttons(self,screen): #Kijkt welke knop getekent moet worden.
-
         for sendmessage in self.sendmessage:
             if sendmessage.status == True:
                 sendmessage.draw(screen)
@@ -131,22 +140,17 @@ class Central:
             if textbox.status == True:
                 return(True)
 
-    def sendmessages(self, tekst,type):
-        if type == "send":
+    def sendmessages(self, tekst,type,time):
+        if type == 'self':
             x = 450
-            color = GRIJS
-            self.y +=50
-            central.sendmessage.append(Textbox(False,tekst,x,self.y,300,50,False,True,color))
-        elif type == 'inladen':
-            x = 450
-            color = GRIJS
-            self.y +=50
-            central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color))
-        else:
-            x = 10 
             color = LBLAUW
             self.y +=50
-            central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color))
+            central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color,time))
+        else:
+            x = 10 
+            color = GRIJS
+            self.y +=50
+            central.sendmessage.append(Textbox(True,tekst,x,self.y,300,50,False,True,color,time))
         self.y += 10
         if self.y > 500:
            central.movemessages("down") 
@@ -160,6 +164,7 @@ class Central:
                 msg.y -= 50*x
                 msg.rect.y = msg.y
                 msg.text_rect = msg.text.get_rect(center=msg.rect.center)
+
             self.y -= 50*x
 
 
@@ -167,11 +172,11 @@ class Central:
 central = Central()
 
 central.buttons.append(Button("type hier", (0, 460, 800,50),True,ZWART ))
-central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS))
+central.textboxes.append(Textbox(True,"",0, 460, 800,50,True,False,GRIJS,''))
 
 central.textboxes[0].binnengekregentext()
 ser = serial.Serial(port, 9600, timeout=1) #pas '/dev/tty.usbserial-14110' aan naar je eigen port waar het bordje op zit aangesloten 
-time.sleep(2)  # tijd buffer om het bordje ook even op goed te laten inladen 
+time.sleep(2)  # tijd buffer om het bordje ook even op goed te laten self 
 ser.reset_input_buffer()
 bericht= False
 bericht_gechecked = True
@@ -202,7 +207,7 @@ while True:
             elif event.key == pygame.K_RETURN:
                 central.buttons[0].status = True
                 central.textboxes[0].status = False
-                central.textboxes[0].opslaan()
+                central.textboxes[0].opslaan_zelf(time.strftime("%H:%M"))
             else:
                 central.textboxes[0].text_string += event.unicode
             central.textboxes[0].updatetext()
@@ -224,7 +229,7 @@ while True:
                     text_rect = central.sendmessage[-1].text.get_rect(center=central.sendmessage[-1].rect.center)
                
                 central.status_huidig_bericht = False
-                central.textboxes[0].anderekantopslaan(tekst)
+                central.textboxes[0].opslaan_van_buiten(tekst)
                 time.sleep(1)
                 ser.write((string_naar_bits('check_vraag.'+pariteitbits_gever(line), woord_naar_ascii) + "\n").encode())
                 print('Bericht ontvangen! check wordt verstuurd')
