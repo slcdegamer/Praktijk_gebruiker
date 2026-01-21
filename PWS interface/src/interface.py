@@ -70,13 +70,13 @@ class Textbox:
         central.sendmessages(self.text_string, "self",time) 
         with open(self.file_path_verstuur, "a") as file: 
             file.write(self.text_string + "%@%" + time +"\n") 
-            ser.write((string_naar_bits('bericht.'+self.text_string, woord_naar_ascii) +"%@%" + time+ "\n").encode()) #de regel die de bits naar het bord verstuurt 
+            ser.write((string_naar_bits('bericht.'+self.text_string, woord_naar_ascii) + "\n").encode()) #de regel die de bits naar het bord verstuurt 
             central.huidige_pariteitbit=pariteitbits_gever(string_naar_bits('bericht.'+self.text_string,woord_naar_ascii)) 
             print('bericht wordt verstuurd...') 
             self.text_string = "" 
 
     def opslaan_van_buiten(self,tekst):
-        central.sendmessages(tekst, "incomming")
+        central.sendmessages(tekst, "incomming",time.strftime("%H:%M"))
         self.opgeslagentextander.append(tekst)
         with open(self.file_path2_ontvang, "a") as file:
                 file.write(tekst + "%@%" + time.strftime("%H:%M") + "\n")
@@ -84,7 +84,7 @@ class Textbox:
 
     def binnengekregentext(self):
         """
-        Format met lines: bericht %@% tijd \n
+        Format met lines: bericht + %@% + tijd + \n
         """
         with open(self.file_path2_ontvang, "r") as file2:
             time = "none"
